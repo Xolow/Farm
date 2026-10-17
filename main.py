@@ -26,7 +26,7 @@ while True:
         if crop_stage >= 3:
             money = money + 15
             crop_stage = 0
-            print("Урожай собран. Получено 15 денег.")
+            print("Урожай собран. Получено 15 монет.")
         else:
             print("Культура ещё не готова к сбору.")
     elif command == "status":
