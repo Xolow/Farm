@@ -9,7 +9,6 @@ from farm_data import (
     STARTING_MONEY,
 )
 
-
 random.seed(42)
 
 
