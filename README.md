@@ -4,11 +4,10 @@
 
 ## Запуск
 
-Требуются [uv](https://docs.astral.sh/uv/) и Python 3.8 или новее:
+Требуется Python 3.8 или новее. Программа не требует сторонних библиотек:
 
 ```bash
-uv sync
-uv run main.py
+python3 main.py
 ```
 
 Команды `plant`, `water` и `harvest` сажают, поливают и собирают культуру. Можно указать её название после команды, например `plant морковь`, `water морковь`, `harvest морковь`. Без названия используется пшеница. Повторная посадка уже растущей культуры не расходует деньги.
@@ -22,8 +21,12 @@ uv run main.py
 ## Тесты
 
 ```bash
-uv sync --group dev
-uv run pytest
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest
 ```
+
+В Windows вместо команды `source` используйте `.venv\Scripts\activate`.
 
 Тесты проверяют функции для готовых культур, описаний и преобразования названий, а также игровые сценарии.

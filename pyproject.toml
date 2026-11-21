@@ -5,11 +5,6 @@ description = "Text farm simulator variant 17"
 requires-python = ">=3.8"
 dependencies = []
 
-[dependency-groups]
-dev = [
-    "pytest>=7,<9",
-]
-
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
