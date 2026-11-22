@@ -89,3 +89,83 @@ def test_invalid_and_repeated_planting(monkeypatch, capsys):
     assert "Культура уже посажена" in output
     assert "Баланс: 90" in output
     assert "Пшеница: стадия 1" in output
+
+
+def test_save_and_load_in_game(tmp_path, monkeypatch, capsys):
+    commands = iter(["plant", "water", "water", "save", "harvest", "load", "status", "exit"])
+    events = iter([3, 0, 0, 0])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+    monkeypatch.setattr(main, "random_event", lambda: next(events))
+
+    main.run_farm()
+
+    output = capsys.readouterr().out
+    assert (tmp_path / "farm_save.json").is_file()
+    assert "Ферма сохранена" in output and "Ферма загружена" in output
+    assert "Баланс: 90 Бонус урожая: 5" in output
+    assert "Пшеница: стадия 3 (готова к сбору)" in output
+    assert "Готовы к сбору: Пшеница" in output
+    assert "Нужно покормить: Корова" in output
+
+
+def test_bad_save_does_not_change_farm(tmp_path, monkeypatch, capsys):
+    (tmp_path / "farm_save.json").write_text("{invalid", encoding="utf-8")
+    commands = iter(["plant", "load", "status", "exit"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+    monkeypatch.setattr(main, "random_event", lambda: 0)
+
+    main.run_farm()
+
+    output = capsys.readouterr().out
+    assert "Не удалось загрузить ферму" in output
+    assert "Баланс: 90" in output
+    assert "Пшеница: стадия 1 (растёт)" in output
+
+
+def test_load_animals_and_inventory(tmp_path, monkeypatch, capsys):
+    state = {
+        "money": 42,
+        "beds": [{"crop": crop, "stage": 0} for crop in main.CROPS],
+        "animals": [{"name": "овца", "hungry": True}],
+        "inventory": ["сено"],
+        "harvest_bonus": 0,
+    }
+    main.save_farm(state, tmp_path / "farm_save.json")
+    commands = iter(["load", "status", "save", "exit"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+
+    main.run_farm()
+
+    output = capsys.readouterr().out
+    assert "Животные: Овца" in output
+    assert "Нужно покормить: Овца" in output
+    assert "Инвентарь: сено" in output
+    assert main.load_farm(tmp_path / "farm_save.json") == state
+
+
+def test_load_four_fields_with_partial_beds(tmp_path, monkeypatch, capsys):
+    state = {
+        "money": 75,
+        "beds": [{"crop": "морковь", "stage": 2}],
+        "animals": [{"name": "овца", "hungry": True}],
+        "inventory": ["сено"],
+    }
+    main.save_farm(state, tmp_path / "farm_save.json")
+    commands = iter(["load", "status", "plant", "save", "exit"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+
+    main.run_farm()
+
+    output = capsys.readouterr().out
+    assert "Ферма загружена" in output
+    assert "Баланс: 75 Бонус урожая: 0" in output
+    assert "Морковь: стадия 2 (растёт)" in output
+    assert "Для этой культуры нет грядки" in output
+    saved = main.load_farm(tmp_path / "farm_save.json")
+    assert saved["beds"] == state["beds"]
+    assert saved["animals"] == state["animals"]
+    assert saved["inventory"] == state["inventory"]

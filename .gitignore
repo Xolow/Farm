@@ -8,5 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+farm_save.json
 .DS_Store
 .DS_Store
